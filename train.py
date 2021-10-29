@@ -63,3 +63,4 @@ if __name__ == "__main__":
     for epoch in range(1, params["epochs"]+1):
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
     torch.save(myModel, '../param/voice.pth')
+ #
