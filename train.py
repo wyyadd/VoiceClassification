@@ -39,7 +39,7 @@ if __name__ == "__main__":
         "n_rnn_layers": 5,
         "rnn_dim": 512,
         "n_class": 219,
-        "n_feats": 256,
+        "n_feats": 40,
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 5e-4,
