@@ -39,7 +39,7 @@ if __name__ == "__main__":
         "dropout": 0.1,
         "learning_rate": 1e-3,
         "batch_size": 1,
-        "epochs": 3
+        "epochs": 1
     }
     # dataset
     training_data = VoiceDataset(path="../dataset/voice/data_thchs30", train=True)
@@ -63,4 +63,3 @@ if __name__ == "__main__":
     for epoch in range(1, params["epochs"]+1):
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
     torch.save(myModel, '../param/voice.pth')
- #
