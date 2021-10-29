@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from VoiceClassificationModel import VoiceClassificationModel
 from torch.utils.data import DataLoader
 from voiceDataset import VoiceDataset, pad_collate
@@ -14,13 +15,17 @@ def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
     data_len = len(dataloader.dataset)
     for batch, (spectrogram, labels, input_lengths, label_lengths) in enumerate(dataloader):
         spectrogram, labels = spectrogram.to(device), labels.to(device)
-
+        # batch, time, n_class
         pred = model(spectrogram)
-        pred.transpose(0, 1)
+        pred = F.log_softmax(pred, dim=2)
+        # time, batch, n_class
+        pred = pred.transpose(0, 1)
         loss = loss_function(pred, labels, input_lengths, label_lengths)
+
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
         scheduler.step()
         if batch % 100 == 0 or batch == data_len:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -38,7 +43,7 @@ if __name__ == "__main__":
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 1e-3,
-        "batch_size": 1,
+        "batch_size": 2,
         "epochs": 1
     }
     # dataset
@@ -59,7 +64,7 @@ if __name__ == "__main__":
                                                     steps_per_epoch=int(len(train_dataloader)),
                                                     epochs=params['epochs'],
                                                     anneal_strategy='linear')
-    loss_fn = nn.CTCLoss(blank=220).to(device)
+    loss_fn = nn.CTCLoss(blank=0).to(device)
     for epoch in range(1, params["epochs"]+1):
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
     torch.save(myModel, '../param/voice.pth')

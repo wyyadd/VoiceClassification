@@ -77,7 +77,6 @@ class VoiceClassificationModel(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(rnn_dim, n_class)
         )
-        self.softmax = nn.Softmax(dim=2)
 
     def forward(self, x):
         x = self.cnn(x)
@@ -88,5 +87,4 @@ class VoiceClassificationModel(nn.Module):
         x = self.fully_connected(x)
         x = self.biRnn_layers(x)
         x = self.classifier(x)
-        x = self.softmax(x)
         return x

@@ -16,7 +16,10 @@ class Encode:
     def text_to_int(self, text):
         int_sequence = []
         for c in text:
-            ch = self.char_map[c]
+            if c == ' ':
+                ch = self.char_map['']
+            else:
+                ch = self.char_map[c]
             int_sequence.append(ch)
         return int_sequence
 
