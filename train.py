@@ -31,8 +31,6 @@ def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch * len(spectrogram), data_len,
                        100. * batch / len(dataloader), loss.item()))
-            l, current = loss.item(), batch * len(spectrogram)
-            print(f"loss: {l:>7f} [{current:>5d}/{data_len:>5d}]")
 
 
 if __name__ == "__main__":
@@ -45,8 +43,8 @@ if __name__ == "__main__":
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 5e-4,
-        "batch_size": 10,
-        "epochs": 1
+        "batch_size": 20,
+        "epochs": 5
     }
     # dataset
     training_data = VoiceDataset(path="../dataset/voice/data_thchs30", train=True)
@@ -69,4 +67,4 @@ if __name__ == "__main__":
     loss_fn = nn.CTCLoss(blank=0).to(device)
     for epoch in range(1, params["epochs"] + 1):
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
-    torch.save(myModel, '../param/voice.pth')
+    torch.save(myModel, '../param/voice_nnf_256.pth')
