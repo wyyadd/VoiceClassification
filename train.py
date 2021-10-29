@@ -31,6 +31,8 @@ def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch * len(spectrogram), data_len,
                        100. * batch / len(dataloader), loss.item()))
+            l, current = loss.item(), batch * len(spectrogram)
+            print(f"loss: {l:>7f} [{current:>5d}/{data_len:>5d}]")
 
 
 if __name__ == "__main__":
