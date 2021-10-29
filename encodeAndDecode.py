@@ -5,7 +5,7 @@ class Encode:
     def __init__(self):
         self.char_map = {" ": 0}
         self.index_map = {0: " "}
-        with open("../dataset/voice/resource/dict/extra_questions.txt") as f:
+        with open("../dataset/voice/resource/dict/extra_questions.txt", encoding="utf8") as f:
             i = 1
             for line in f.readlines():
                 for ch in line.strip().split(' '):
@@ -30,7 +30,7 @@ class Encode:
 class Decode:
     def __init__(self):
         self.dic = {}
-        with open("../dataset/voice/resource/dict/lexicon.txt") as f:
+        with open("../dataset/voice/resource/dict/lexicon.txt", encoding="utf8") as f:
             i = 0
             for line in f.readlines():
                 line = line.strip().split(' ')
@@ -38,5 +38,3 @@ class Decode:
                 line.pop(0)
                 key = "".join(line)
                 self.dic[key] = value
-
-test = Encode()

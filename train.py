@@ -16,8 +16,7 @@ def train_loop(model, dataloader):
         print(pred.size())
         arg_maxes = torch.argmax(pred, dim=2)
         for i, args in enumerate(arg_maxes):
-            for j, index in enumerate(args):
-                print(j, index.size())
+            print(args.size())
 
 
 if __name__ == "__main__":
@@ -26,11 +25,11 @@ if __name__ == "__main__":
         "n_rnn_layers": 5,
         "rnn_dim": 512,
         "n_class": 220,
-        "n_feats": 40,
+        "n_feats": 256,
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 5e-4,
-        "batch_size": 2,
+        "batch_size": 10,
         "epochs": 1
     }
     # dataset

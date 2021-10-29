@@ -14,7 +14,7 @@ def load_voice_item(filename: str,
     waveform, sample_rate = torchaudio.load(filename)
     waveform = torch.reshape(waveform, (-1,))
     label = []
-    with open(filename + ".trn") as labels:
+    with open(filename + ".trn", encoding="utf8") as labels:
         for line in labels:
             label = line.strip()
     label = label.split(' ')
@@ -29,7 +29,7 @@ def pad_collate(batch):
     for waveform, sample_rate, label in batch:
         mfcc_transform = torchaudio.transforms.MFCC(
             sample_rate=sample_rate,
-            n_mfcc=40,
+            n_mfcc=256,
             melkwargs={
                 'n_fft': 2048,
                 'n_mels': 256,
