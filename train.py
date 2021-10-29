@@ -38,12 +38,12 @@ if __name__ == "__main__":
         "n_cnn_layers": 3,
         "n_rnn_layers": 5,
         "rnn_dim": 512,
-        "n_class": 220,
+        "n_class": 219,
         "n_feats": 256,
         "stride": 2,
         "dropout": 0.1,
-        "learning_rate": 1e-3,
-        "batch_size": 2,
+        "learning_rate": 5e-4,
+        "batch_size": 10,
         "epochs": 1
     }
     # dataset
@@ -65,6 +65,6 @@ if __name__ == "__main__":
                                                     epochs=params['epochs'],
                                                     anneal_strategy='linear')
     loss_fn = nn.CTCLoss(blank=0).to(device)
-    for epoch in range(1, params["epochs"]+1):
+    for epoch in range(1, params["epochs"] + 1):
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
     torch.save(myModel, '../param/voice.pth')
