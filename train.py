@@ -38,7 +38,7 @@ def test_loop(model, dataloader, loss_function):
     model.eval()
     test_loss = 0
     test_cer, test_wer = [], []
-    with torch.no_grad:
+    with torch.no_grad():
         for batch, (spectrogram, labels, input_lengths, label_lengths) in enumerate(dataloader):
             spectrogram, labels = spectrogram.to(device), labels.to(device)
             # batch, time, n_class
@@ -51,8 +51,10 @@ def test_loop(model, dataloader, loss_function):
             decoded_preds, decoded_targets = encodeAndDecode.decode.greed_decode(pred.transpose(0, 1), labels,
                                                                                  label_lengths)
             for j in range(len(decoded_preds)):
-                test_cer.append(encodeAndDecode.cer(decoded_targets[j], decoded_preds[j]))
-                test_wer.append(encodeAndDecode.wer(decoded_targets[j], decoded_preds[j]))
+                target = ''.join(decoded_targets[j])
+                pred = ''.join(decoded_preds[j])
+                test_cer.append(encodeAndDecode.cer(target, pred))
+                test_wer.append(encodeAndDecode.wer(target, pred))
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
     print('Test set: Average loss: {:.4f}, Average CER: {:4f} Average WER: {:.4f}\n'.format(test_loss, avg_cer,
@@ -69,7 +71,7 @@ if __name__ == "__main__":
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 5e-4,
-        "batch_size": 20,
+        "batch_size": 2,
         "epochs": 5
     }
     # dataset
@@ -92,6 +94,7 @@ if __name__ == "__main__":
                                                     anneal_strategy='linear')
     loss_fn = nn.CTCLoss(blank=0).to(device)
     for epoch in range(1, params["epochs"] + 1):
-        train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
         test_loop(myModel, test_dataloader, loss_fn)
+        train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
+
     torch.save(myModel, '../param/voice_nnf_256.pth')

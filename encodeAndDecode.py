@@ -47,7 +47,13 @@ class Decode:
                 key = "".join(line)
                 self.dic[key] = value
 
-    def greed_decode(self, output, labels, label_lengths, blank_label=28, collapse_repeated=True):
+    # def int_to_pinyin(self, text):
+    #     string = []
+    #     for i in text:
+    #         string.append(self.dic[i])
+    #     return string
+
+    def greed_decode(self, output, labels, label_lengths, blank_label=0, collapse_repeated=True):
         arg_maxes = torch.argmax(output, dim=2)
         decodes = []
         targets = []
@@ -55,10 +61,11 @@ class Decode:
             decode = []
             targets.append(encode.int_to_text(labels[i][:label_lengths[i]].tolist()))
             for j, index in enumerate(args):
+                index = index.item()
                 if index != blank_label:
                     if collapse_repeated and j != 0 and index == args[j - 1]:
                         continue
-                    decode.append(index.item())
+                    decode.append(index)
             decodes.append(encode.int_to_text(decode))
         return decodes, targets
 
