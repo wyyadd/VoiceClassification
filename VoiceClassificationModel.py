@@ -54,9 +54,9 @@ class GRU(nn.Module):
         return x
 
 
-class VoiceClassification(nn.Module):
+class VoiceClassificationModel(nn.Module):
     def __init__(self, n_cnn_layers, n_rnn_layers, rnn_dim, n_class, n_feats, stride=2, dropout=0.1):
-        super(VoiceClassification, self).__init__()
+        super(VoiceClassificationModel, self).__init__()
         n_feats = n_feats // 2
         self.cnn = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, stride=stride, padding=3 // 2)
         self.resCnn_layers = nn.Sequential(

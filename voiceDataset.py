@@ -25,7 +25,9 @@ def load_voice_item(filename: str,
 
 def pad_collate(batch):
     mfcc = []
-    targets = []
+    labels = []
+    input_lengths = []
+    label_lengths = []
     for waveform, sample_rate, label in batch:
         mfcc_transform = torchaudio.transforms.MFCC(
             sample_rate=sample_rate,
@@ -37,11 +39,13 @@ def pad_collate(batch):
                 'mel_scale': 'htk',
             }
         )
-        targets.append(label)
+        label_lengths.append(len(label))
+        labels.append(label)
         mfcc.append(mfcc_transform(waveform).transpose(0, 1))
+        input_lengths.append(mfcc[-1].shape[0] // 2)
     mfcc = torch.nn.utils.rnn.pad_sequence(mfcc, batch_first=True).unsqueeze(1).transpose(2, 3)
-    targets = torch.nn.utils.rnn.pad_sequence(targets, batch_first=True)
-    return [mfcc, targets]
+    labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True)
+    return mfcc, labels, input_lengths, label_lengths
 
 
 class VoiceDataset(Dataset):
