@@ -73,7 +73,9 @@ class Decode:
         else:
             return ''
 
-    def greed_decode(self, output, labels, label_lengths, blank_label=0, collapse_repeated=True):
+    def greed_decode(self, output, labels=None, label_lengths=0, blank_label=0, collapse_repeated=True):
+        if labels is None:
+            labels = []
         arg_maxes = torch.argmax(output, dim=2)
         decodes = []
         targets = []

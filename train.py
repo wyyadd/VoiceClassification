@@ -55,11 +55,11 @@ def test_loop(model, dataloader, loss_function):
                                                                                  label_lengths)
             for j in range(len(decoded_preds)):
                 target = chinese_labels[j]
-                pred = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
-                test_cer.append(encodeAndDecode.cer(target, pred))
-                test_wer.append(encodeAndDecode.wer(target, pred))
+                pred_str = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
+                test_cer.append(encodeAndDecode.cer(target, pred_str))
+                test_wer.append(encodeAndDecode.wer(target, pred_str))
                 if index % 9 == 0 and index != 0:
-                    print('Predict: {} \n target: {}'.format(pred, target))
+                    print('Predict: {} \n target: {}'.format(pred_str, target))
 
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
