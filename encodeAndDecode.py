@@ -59,8 +59,10 @@ class Decode:
                 pinyin.append(x)
         if len(pinyin) == 0:
             return ''
-        result = viterbi(hmm_params=self._hmmparams, observations=pinyin, path_num=1, log=True)
-        return result[0]
+        result = str
+        for item in viterbi(hmm_params=self._hmmparams, observations=pinyin, path_num=1, log=True):
+            result = ''.join(item.path)
+        return result
 
     def transform(self, x: str):
         # change to no digit str

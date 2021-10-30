@@ -13,6 +13,8 @@ else:
 
 
 def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
+    print("-----start train----")
+    model.train()
     data_len = len(dataloader.dataset)
     for batch, (spectrogram, pinyin_labels, input_lengths, label_lengths, _) in enumerate(dataloader):
         spectrogram, pinyin_labels = spectrogram.to(device), pinyin_labels.to(device)
@@ -35,6 +37,7 @@ def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
 
 
 def test_loop(model, dataloader, loss_function):
+    print("-----start evaluate----")
     model.eval()
     test_loss = 0
     test_cer, test_wer = [], []
@@ -52,14 +55,15 @@ def test_loop(model, dataloader, loss_function):
                                                                                  label_lengths)
             for j in range(len(decoded_preds)):
                 target = chinese_labels[j]
-                pred = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
+                pred = encodeAndDecode.decode.pinyin2chinese(decoded_targets[j])
                 test_cer.append(encodeAndDecode.cer(target, pred))
                 test_wer.append(encodeAndDecode.wer(target, pred))
-                print('batch:{}\n Predict: {} \n target: {}'.format(batch, pred, target))
+                if batch % 500 == 0:
+                    print('batch:{}\n Predict: {} \n target: {}'.format(batch, pred, target))
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
-    print('Test set: Average loss: {:.4f}, Average CER: {:4f} Average WER: {:.4f}\n'.format(test_loss, avg_cer,
-                                                                                            avg_wer))
+    print(
+        'Test set: Average loss: {:.4f}, Average CER: {:4f}, Average WER: {:4f}\n'.format(test_loss, avg_cer, avg_wer))
 
 
 if __name__ == "__main__":
@@ -72,8 +76,8 @@ if __name__ == "__main__":
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 5e-4,
-        "batch_size": 2,
-        "epochs": 5
+        "batch_size": 20,
+        "epochs": 10
     }
     # dataset
     training_data = VoiceDataset(path="../dataset/voice/data_thchs30", train=True)
@@ -96,7 +100,7 @@ if __name__ == "__main__":
     loss_fn = nn.CTCLoss(blank=0).to(device)
     # train and test
     for epoch in range(1, params["epochs"] + 1):
+
         test_loop(myModel, test_dataloader, loss_fn)
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
-
     torch.save(myModel, '../param/voice_nnf_256.pth')
