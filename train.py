@@ -58,7 +58,7 @@ def test_loop(model, dataloader, loss_function):
                 pred = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
                 test_cer.append(encodeAndDecode.cer(target, pred))
                 test_wer.append(encodeAndDecode.wer(target, pred))
-                if batch % 500 == 0:
+                if batch % 19 == 0:
                     print('batch:{}\n Predict: {} \n target: {}'.format(batch, pred, target))
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
