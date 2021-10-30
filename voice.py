@@ -8,9 +8,10 @@ if torch.cuda.is_available():
 else:
     device = 'cpu'
 
+
 def test():
     model_path = "../param/voice_nnf_20.pth"
-    filename = "E:/FFOutput/test.wav"
+    filename = "D:/D4_762.wav"
     # model
     myModel = torch.load(model_path)
     waveform, sample_rate = torchaudio.load(filename)
@@ -35,6 +36,7 @@ def test():
     print(decoded_preds[0])
     chinese = encodeAndDecode.decode.pinyin2chinese(decoded_preds[0])
     return chinese
+
 
 print(test())
 

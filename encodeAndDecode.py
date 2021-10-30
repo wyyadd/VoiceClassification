@@ -54,7 +54,7 @@ class Decode:
         pinyin = []
         # 规范
         for i in range(0, len(labels), 2):
-            x = simplify_pinyin(self.transform(labels[i] + labels[i + 1]))
+            x = self.transform(labels[i] + labels[i + 1])
             if is_pinyin(x):
                 pinyin.append(x)
         if len(pinyin) == 0:
@@ -69,7 +69,8 @@ class Decode:
             # to lower case
             result = self.dic[x].lower()
             # remove digit
-            return result.rstrip(result[-1])
+            # return result.rstrip(result[-1])
+            return result
         else:
             return ''
 
