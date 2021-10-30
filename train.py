@@ -14,7 +14,6 @@ else:
 
 def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
     print("-----start train----")
-    model.train()
     data_len = len(dataloader.dataset)
     for batch, (spectrogram, pinyin_labels, input_lengths, label_lengths, _) in enumerate(dataloader):
         spectrogram, pinyin_labels = spectrogram.to(device), pinyin_labels.to(device)
@@ -38,11 +37,12 @@ def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
 
 def test_loop(model, dataloader, loss_function):
     print("-----start evaluate----")
-    model.eval()
     test_loss = 0
     test_cer, test_wer = [], []
     with torch.no_grad():
-        for batch, (spectrogram, pinyin_labels, input_lengths, label_lengths, chinese_labels) in enumerate(dataloader):
+        for index, (spectrogram, pinyin_labels, input_lengths, label_lengths, chinese_labels) in enumerate(dataloader):
+            if index == 10:
+                break
             spectrogram, pinyin_labels = spectrogram.to(device), pinyin_labels.to(device)
             # batch, time, n_class
             pred = model(spectrogram)
@@ -58,8 +58,9 @@ def test_loop(model, dataloader, loss_function):
                 pred = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
                 test_cer.append(encodeAndDecode.cer(target, pred))
                 test_wer.append(encodeAndDecode.wer(target, pred))
-                if batch % 100 == 0:
-                    print('batch:{}\n Predict: {} \n target: {}'.format(batch, pred, target))
+                if index % 9 == 0 and index != 0:
+                    print('Predict: {} \n target: {}'.format(pred, target))
+
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
     print(
