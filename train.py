@@ -14,14 +14,14 @@ else:
 
 def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
     data_len = len(dataloader.dataset)
-    for batch, (spectrogram, labels, input_lengths, label_lengths) in enumerate(dataloader):
-        spectrogram, labels = spectrogram.to(device), labels.to(device)
+    for batch, (spectrogram, pinyin_labels, input_lengths, label_lengths, _) in enumerate(dataloader):
+        spectrogram, pinyin_labels = spectrogram.to(device), pinyin_labels.to(device)
         # batch, time, n_class
         pred = model(spectrogram)
         pred = F.log_softmax(pred, dim=2)
         # time, batch, n_class
         pred = pred.transpose(0, 1)
-        loss = loss_function(pred, labels, input_lengths, label_lengths)
+        loss = loss_function(pred, pinyin_labels, input_lengths, label_lengths)
 
         optimizer.zero_grad()
         loss.backward()
@@ -39,22 +39,23 @@ def test_loop(model, dataloader, loss_function):
     test_loss = 0
     test_cer, test_wer = [], []
     with torch.no_grad():
-        for batch, (spectrogram, labels, input_lengths, label_lengths) in enumerate(dataloader):
-            spectrogram, labels = spectrogram.to(device), labels.to(device)
+        for batch, (spectrogram, pinyin_labels, input_lengths, label_lengths, chinese_labels) in enumerate(dataloader):
+            spectrogram, pinyin_labels = spectrogram.to(device), pinyin_labels.to(device)
             # batch, time, n_class
             pred = model(spectrogram)
             pred = F.log_softmax(pred, dim=2)
             # time, batch, n_class
             pred = pred.transpose(0, 1)
-            loss = loss_function(pred, labels, input_lengths, label_lengths)
+            loss = loss_function(pred, pinyin_labels, input_lengths, label_lengths)
             test_loss += loss.item() / len(dataloader)
-            decoded_preds, decoded_targets = encodeAndDecode.decode.greed_decode(pred.transpose(0, 1), labels,
+            decoded_preds, decoded_targets = encodeAndDecode.decode.greed_decode(pred.transpose(0, 1), pinyin_labels,
                                                                                  label_lengths)
             for j in range(len(decoded_preds)):
-                target = ''.join(decoded_targets[j])
-                pred = ''.join(decoded_preds[j])
+                target = chinese_labels[j]
+                pred = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
                 test_cer.append(encodeAndDecode.cer(target, pred))
                 test_wer.append(encodeAndDecode.wer(target, pred))
+                print('batch:{}\n Predict: {} \n target: {}'.format(batch, pred, target))
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
     print('Test set: Average loss: {:.4f}, Average CER: {:4f} Average WER: {:.4f}\n'.format(test_loss, avg_cer,
@@ -93,6 +94,7 @@ if __name__ == "__main__":
                                                     epochs=params['epochs'],
                                                     anneal_strategy='linear')
     loss_fn = nn.CTCLoss(blank=0).to(device)
+    # train and test
     for epoch in range(1, params["epochs"] + 1):
         test_loop(myModel, test_dataloader, loss_fn)
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)

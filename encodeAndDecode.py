@@ -1,6 +1,10 @@
 import os
 import numpy as np
 import torch
+from Pinyin2Hanzi import simplify_pinyin
+from Pinyin2Hanzi import DefaultHmmParams
+from Pinyin2Hanzi import viterbi
+from Pinyin2Hanzi import is_pinyin
 
 
 class Encode:
@@ -37,21 +41,36 @@ encode = Encode()
 
 class Decode:
     def __init__(self):
+        self._hmmparams = DefaultHmmParams()
         self.dic = {}
-        with open("../dataset/voice/resource/dict/lexicon.txt", encoding="utf8") as f:
-            i = 0
+        with open("../dataset/voice/resource/dict/pinyin2phone.tone.txt") as f:
             for line in f.readlines():
                 line = line.strip().split(' ')
-                value = line[0]
-                line.pop(0)
-                key = "".join(line)
-                self.dic[key] = value
+                self.dic[line[1] + line[2]] = line[0]
 
-    # def int_to_pinyin(self, text):
-    #     string = []
-    #     for i in text:
-    #         string.append(self.dic[i])
-    #     return string
+    def pinyin2chinese(self, labels: list) -> str:
+        if len(labels) % 2 != 0:
+            labels.append('')
+        pinyin = []
+        # 规范
+        for i in range(0, len(labels), 2):
+            x = simplify_pinyin(self.transform(labels[i] + labels[i + 1]))
+            if is_pinyin(x):
+                pinyin.append(x)
+        if len(pinyin) == 0:
+            return ''
+        result = viterbi(hmm_params=self._hmmparams, observations=pinyin, path_num=1, log=True)
+        return result[0]
+
+    def transform(self, x: str):
+        # change to no digit str
+        if x in self.dic:
+            # to lower case
+            result = self.dic[x].lower()
+            # remove digit
+            return result.rstrip(result[-1])
+        else:
+            return ''
 
     def greed_decode(self, output, labels, label_lengths, blank_label=0, collapse_repeated=True):
         arg_maxes = torch.argmax(output, dim=2)
@@ -104,7 +123,7 @@ def _levenshtein_distance(ref, hyp):
     distance = np.zeros((2, n + 1), dtype=np.int32)
 
     # initialize distance matrix
-    for j in range(0,n + 1):
+    for j in range(0, n + 1):
         distance[0][j] = j
 
     # calculate levenshtein distance

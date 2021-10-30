@@ -8,26 +8,28 @@ from encodeAndDecode import Encode
 
 
 def load_voice_item(filename: str,
-                    path: str) -> Tuple[Tensor, int, Tensor]:
+                    path: str) -> Tuple[Tensor, int, Tensor, str]:
     filename = path + "/data/" + filename
     waveform, sample_rate = torchaudio.load(filename)
     waveform = torch.flatten(waveform)
-    label = []
+    pinyin_label = []
+    chinese_label = str
     with open(filename + ".trn", encoding="utf8") as labels:
-        for line in labels:
-            label = line.strip()
-    label = label.split(' ')
+        lines = labels.readlines()
+        chinese_label = lines[0].strip().replace(' ', '')
+        pinyin_label = lines[2].strip().split(' ')
     encode = Encode()
-    label = torch.tensor(encode.text_to_int(label))
-    return waveform, sample_rate, label
+    pinyin_label = torch.tensor(encode.text_to_int(pinyin_label))
+    return waveform, sample_rate, pinyin_label, chinese_label
 
 
 def pad_collate(batch):
     mfcc = []
-    labels = []
+    pinyin_labels = []
     input_lengths = []
     label_lengths = []
-    for waveform, sample_rate, label in batch:
+    chinese_labels = []
+    for waveform, sample_rate, pinyin_label, chinese_label in batch:
         mfcc_transform = torchaudio.transforms.MFCC(
             sample_rate=sample_rate,
             n_mfcc=256,
@@ -38,13 +40,14 @@ def pad_collate(batch):
                 'mel_scale': 'htk',
             }
         )
-        label_lengths.append(len(label))
-        labels.append(label)
+        label_lengths.append(len(pinyin_label))
+        pinyin_labels.append(pinyin_label)
+        chinese_labels.append(chinese_label)
         mfcc.append(mfcc_transform(waveform).transpose(0, 1))
         input_lengths.append(mfcc[-1].shape[0] // 2)
     mfcc = torch.nn.utils.rnn.pad_sequence(mfcc, batch_first=True).unsqueeze(1).transpose(2, 3)
-    labels = torch.nn.utils.rnn.pad_sequence(labels, batch_first=True)
-    return mfcc, labels, input_lengths, label_lengths
+    pinyin_labels = torch.nn.utils.rnn.pad_sequence(pinyin_labels, batch_first=True)
+    return mfcc, pinyin_labels, input_lengths, label_lengths, chinese_labels
 
 
 class VoiceDataset(Dataset):
@@ -55,7 +58,7 @@ class VoiceDataset(Dataset):
             if os.path.splitext(name)[1] == ".wav":
                 self._walker.append(name)
 
-    def __getitem__(self, idx) -> Tuple[Tensor, int, Tensor]:
+    def __getitem__(self, idx) -> Tuple[Tensor, int, Tensor, str]:
         filename = self._walker[idx]
         return load_voice_item(filename, self._dir)
 
