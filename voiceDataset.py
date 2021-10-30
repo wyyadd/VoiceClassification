@@ -32,10 +32,10 @@ def pad_collate(batch):
     for waveform, sample_rate, pinyin_label, chinese_label in batch:
         mfcc_transform = torchaudio.transforms.MFCC(
             sample_rate=sample_rate,
-            n_mfcc=256,
+            n_mfcc=40,
             melkwargs={
                 'n_fft': 2048,
-                'n_mels': 256,
+                'n_mels': 128,
                 'hop_length': 512,
                 'mel_scale': 'htk',
             }

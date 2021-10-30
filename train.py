@@ -15,6 +15,7 @@ else:
 def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
     print("-----start train----")
     data_len = len(dataloader.dataset)
+    model.train()
     for batch, (spectrogram, pinyin_labels, input_lengths, label_lengths, _) in enumerate(dataloader):
         spectrogram, pinyin_labels = spectrogram.to(device), pinyin_labels.to(device)
         # batch, time, n_class
@@ -39,6 +40,7 @@ def test_loop(model, dataloader, loss_function):
     print("-----start evaluate----")
     test_loss = 0
     test_cer, test_wer = [], []
+    model.eval()
     with torch.no_grad():
         for index, (spectrogram, pinyin_labels, input_lengths, label_lengths, chinese_labels) in enumerate(dataloader):
             if index == 10:
@@ -59,7 +61,7 @@ def test_loop(model, dataloader, loss_function):
                 test_cer.append(encodeAndDecode.cer(target, pred_str))
                 test_wer.append(encodeAndDecode.wer(target, pred_str))
                 if index % 9 == 0 and index != 0:
-                    print('Predict: {} \n target: {}'.format(pred_str, target))
+                    print('Predict: {} \n target: {}'.format(decoded_preds[j]+pred_str, decoded_targets[j]+target))
 
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
@@ -73,7 +75,7 @@ if __name__ == "__main__":
         "n_rnn_layers": 5,
         "rnn_dim": 512,
         "n_class": 219,
-        "n_feats": 256,
+        "n_feats": 40,
         "stride": 2,
         "dropout": 0.1,
         "learning_rate": 5e-4,
@@ -86,7 +88,7 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(training_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
                                   shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
-                                 shuffle=False)
+                                 shuffle=True)
     # model
     myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
                                        params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(
@@ -103,4 +105,4 @@ if __name__ == "__main__":
     for epoch in range(1, params["epochs"] + 1):
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
         test_loop(myModel, test_dataloader, loss_fn)
-    torch.save(myModel, '../param/voice_nnf_256.pth')
+    torch.save(myModel, '../param/voice_nnf_20.pth')
