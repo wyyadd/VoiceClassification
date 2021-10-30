@@ -32,9 +32,9 @@ def test():
     pred = myModel(voice)
     pred = F.log_softmax(pred, dim=2)
     decoded_preds, _ = encodeAndDecode.decode.greed_decode(pred)
+    print(decoded_preds[0])
     chinese = encodeAndDecode.decode.pinyin2chinese(decoded_preds[0])
     return chinese
-
 
 print(test())
 
