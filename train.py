@@ -55,7 +55,7 @@ def test_loop(model, dataloader, loss_function):
                                                                                  label_lengths)
             for j in range(len(decoded_preds)):
                 target = chinese_labels[j]
-                pred = encodeAndDecode.decode.pinyin2chinese(decoded_targets[j])
+                pred = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
                 test_cer.append(encodeAndDecode.cer(target, pred))
                 test_wer.append(encodeAndDecode.wer(target, pred))
                 if batch % 500 == 0:
@@ -100,7 +100,6 @@ if __name__ == "__main__":
     loss_fn = nn.CTCLoss(blank=0).to(device)
     # train and test
     for epoch in range(1, params["epochs"] + 1):
-
-        test_loop(myModel, test_dataloader, loss_fn)
         train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
+        test_loop(myModel, test_dataloader, loss_fn)
     torch.save(myModel, '../param/voice_nnf_256.pth')
