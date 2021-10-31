@@ -7,10 +7,10 @@ from Pinyin2Hanzi import is_pinyin
 
 class Encode:
     def __init__(self):
-        self.char_map = {" ": 0}
-        self.index_map = {0: " "}
+        self.char_map = {' ': 0, "'": 1}
+        self.index_map = {0: ' ', 1: "'"}
         with open("../dataset/voice/resource/dict/extra_questions.txt", encoding="utf8") as f:
-            i = 1
+            i = 2
             for line in f.readlines():
                 for ch in line.strip().split(' '):
                     self.char_map[ch] = int(i)

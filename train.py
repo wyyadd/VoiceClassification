@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from VoiceClassificationModel import VoiceClassificationModel
 from voiceDataset import VoiceDataset, pad_collate
 import encodeAndDecode
 
@@ -74,7 +75,7 @@ if __name__ == "__main__":
         "n_cnn_layers": 3,
         "n_rnn_layers": 5,
         "rnn_dim": 512,
-        "n_class": 219,
+        "n_class": 220,
         "n_feats": 40,
         "stride": 2,
         "dropout": 0.1,
@@ -90,10 +91,10 @@ if __name__ == "__main__":
     test_dataloader = DataLoader(test_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
                                  shuffle=True)
     # model
-    # myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
-    #                                    params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(
-    #     device)
-    myModel = torch.load('../param/voice_nnf_40.pth')
+    myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
+                                       params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(
+        device)
+    # myModel = torch.load('../param/voice_nnf_40.pth')
     # loss_fn and optimizer
     opt = torch.optim.AdamW(myModel.parameters(), params['learning_rate'])
     scheduler = torch.optim.lr_scheduler.OneCycleLR(opt,
@@ -104,6 +105,6 @@ if __name__ == "__main__":
     loss_fn = nn.CTCLoss(blank=0).to(device)
     # train and test
     for epoch in range(1, params["epochs"] + 1):
-        # train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
+        train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
         test_loop(myModel, test_dataloader, loss_fn)
-    # torch.save(myModel, '../param/voice_nnf_40.pth')
+    torch.save(myModel, '../param/voice_nnf_40_new.pth')

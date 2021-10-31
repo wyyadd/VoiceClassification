@@ -11,7 +11,7 @@ else:
 
 def test():
     model_path = "../param/voice_nnf_40.pth"
-    filename = "D:/Default_20211031-113512.wav"
+    filename = "/home/wyyadd/Default_20211031-212852.wav"
     # model
     myModel = torch.load(model_path)
     waveform, sample_rate = torchaudio.load(filename)
