@@ -1,7 +1,5 @@
-import os
 import numpy as np
 import torch
-from Pinyin2Hanzi import simplify_pinyin
 from Pinyin2Hanzi import DefaultHmmParams
 from Pinyin2Hanzi import viterbi
 from Pinyin2Hanzi import is_pinyin

@@ -60,8 +60,8 @@ def test_loop(model, dataloader, loss_function):
                 test_cer.append(encodeAndDecode.cer(target, pred_str))
                 test_wer.append(encodeAndDecode.wer(target, pred_str))
                 if index % 9 == 0 and index != 0:
-                    print('Predict: {} \n target: {}'.format(''.join(decoded_preds[j]) + pred_str,
-                                                             ''.join(decoded_targets[j]) + target))
+                    print('Predict: {} \n target: {}'.format(pred_str,
+                                                             target))
 
     avg_cer = sum(test_cer) / len(test_cer)
     avg_wer = sum(test_wer) / len(test_wer)
@@ -80,7 +80,7 @@ if __name__ == "__main__":
         "dropout": 0.1,
         "learning_rate": 5e-4,
         "batch_size": 20,
-        "epochs": 10
+        "epochs": 1
     }
     # dataset
     training_data = VoiceDataset(path="../dataset/voice/data_thchs30", train=True)
