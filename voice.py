@@ -11,11 +11,10 @@ else:
 
 def test():
     model_path = "../param/voice_nnf_40.pth"
-    filename = "/home/wyyadd/C32_667.wav"
+    filename = "/home/wyyadd/B2_352.wav"
     # model
     myModel = torch.load(model_path)
     waveform, sample_rate = torchaudio.load(filename)
-    print(torchaudio.info(filename))
     waveform = torch.flatten(waveform)
     mfcc_transform = torchaudio.transforms.MFCC(
         sample_rate=sample_rate,
@@ -34,10 +33,11 @@ def test():
     pred = myModel(voice)
     pred = F.log_softmax(pred, dim=2)
     decoded_preds, _ = encodeAndDecode.decode.greed_decode(pred)
-    print(decoded_preds[0])
-    chinese = encodeAndDecode.decode.pinyin2chinese(decoded_preds[0])
-    return chinese
+    chinese, chinese_pinyin = encodeAndDecode.decode.pinyin2chinese(decoded_preds[0])
+    return chinese, chinese_pinyin
 
 
-print(test())
+chinese , chinese_pinyin = test()
+print(chinese)
+print(chinese_pinyin)
 

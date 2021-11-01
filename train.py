@@ -57,12 +57,16 @@ def test_loop(model, dataloader, loss_function):
                                                                                  label_lengths)
             for j in range(len(decoded_preds)):
                 target = chinese_labels[j]
-                pred_str = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
+                pred_str, pred_pinyin = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
                 chinese_cer.append(encodeAndDecode.cer(target, pred_str))
                 pinyin_cer.append(encodeAndDecode.cer(''.join(decoded_targets[j]), ''.join(decoded_preds[j])))
                 if index % 3 == 0 and index != 0:
-                    print('Predict: {} \n target: {}'.format(pred_str + ''.join(decoded_preds[j]),
-                                                             target + ''.join(decoded_targets[j])))
+                    target_pinyin = []
+                    for i in range(0, len(decoded_targets[j]), 2):
+                        target_pinyin.append(decoded_targets[j][i] + decoded_targets[j][i + 1])
+                    print('Predict_chinese: {} \n Predict_pinyin: {}\n target_pinyin: {}\n target_chinese: {}'.format(
+                        pred_str, pred_pinyin,
+                        ' '.join(target_pinyin), target))
 
     avg_chinese_cer = sum(chinese_cer) / len(chinese_cer)
     avg_pinyin_cer = sum(pinyin_cer) / len(pinyin_cer)
@@ -91,7 +95,7 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(training_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
                                   shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
-                                 shuffle=False)
+                                 shuffle=True)
     # model
     # myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
     #                                    params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(

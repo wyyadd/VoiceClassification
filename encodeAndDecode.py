@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import numpy as np
 import torch
 from Pinyin2Hanzi import DefaultHmmParams
@@ -46,7 +48,7 @@ class Decode:
                 line = line.strip().split(' ')
                 self.dic[line[1] + line[2]] = line[0]
 
-    def pinyin2chinese(self, labels: list) -> str:
+    def pinyin2chinese(self, labels: list) -> Tuple[str, str]:
         if len(labels) % 2 != 0:
             labels.append('')
         pinyin = []
@@ -63,7 +65,7 @@ class Decode:
             return ''
         result = viterbi(hmm_params=self._hmmparams, observations=pinyin, path_num=1, log=True)[0]
         result = ''.join(result.path)
-        return result
+        return result, ' '.join(pinyin)
 
     def transform(self, x: str):
         # change to no digit str
