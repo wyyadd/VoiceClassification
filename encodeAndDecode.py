@@ -53,9 +53,13 @@ class Decode:
         # 规范
         for i in range(0, len(labels), 2):
             x = self.transform(labels[i] + labels[i + 1])
-            if is_pinyin(x):
-                pinyin.append(x)
-        if len(pinyin) == 0:
+            while not is_pinyin(x) and i < len(labels)-2:
+                i += 1
+                x = self.transform(labels[i] + labels[i + 1])
+            else:
+                if i != len(labels)-2:
+                    pinyin.append(x)
+        if len(labels) == 0:
             return ''
         result = viterbi(hmm_params=self._hmmparams, observations=pinyin, path_num=1, log=True)[0]
         result = ''.join(result.path)

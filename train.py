@@ -39,7 +39,7 @@ def train_loop(model, dataloader, loss_function, optimizer, scheduler, epoch):
 def test_loop(model, dataloader, loss_function):
     print("-----start evaluate----")
     test_loss = 0
-    test_cer, test_wer = [], []
+    chinese_cer, pinyin_cer = [], []
     model.eval()
     with torch.no_grad():
         for index, (spectrogram, pinyin_labels, input_lengths, label_lengths, chinese_labels) in enumerate(dataloader):
@@ -58,16 +58,18 @@ def test_loop(model, dataloader, loss_function):
             for j in range(len(decoded_preds)):
                 target = chinese_labels[j]
                 pred_str = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
-                test_cer.append(encodeAndDecode.cer(target, pred_str))
-                test_wer.append(encodeAndDecode.wer(target, pred_str))
-                if index % 9 == 0 and index != 0:
-                    print('Predict: {} \n target: {}'.format(pred_str,
-                                                             target))
+                chinese_cer.append(encodeAndDecode.cer(target, pred_str))
+                pinyin_cer.append(encodeAndDecode.cer(''.join(decoded_targets[j]), ''.join(decoded_preds[j])))
+                if index % 3 == 0 and index != 0:
+                    print('Predict: {} \n target: {}'.format(pred_str + ''.join(decoded_preds[j]),
+                                                             target + ''.join(decoded_targets[j])))
 
-    avg_cer = sum(test_cer) / len(test_cer)
-    avg_wer = sum(test_wer) / len(test_wer)
+    avg_chinese_cer = sum(chinese_cer) / len(chinese_cer)
+    avg_pinyin_cer = sum(pinyin_cer) / len(pinyin_cer)
     print(
-        'Test set: Average loss: {:.4f}, Average CER: {:4f}, Average WER: {:4f}\n'.format(test_loss, avg_cer, avg_wer))
+        'Test set: Average loss: {:.4f}, Average chinese CER: {:4f}, Average pinyin CER: {:4f}\n'.format(test_loss,
+                                                                                                         avg_chinese_cer,
+                                                                                                         avg_pinyin_cer))
 
 
 if __name__ == "__main__":
@@ -89,12 +91,12 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(training_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
                                   shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
-                                 shuffle=True)
+                                 shuffle=False)
     # model
-    myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
-                                       params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(
-        device)
-    # myModel = torch.load('../param/voice_nnf_40.pth')
+    # myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
+    #                                    params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(
+    #     device)
+    myModel = torch.load('../param/voice_nnf_40.pth')
     # loss_fn and optimizer
     opt = torch.optim.AdamW(myModel.parameters(), params['learning_rate'])
     scheduler = torch.optim.lr_scheduler.OneCycleLR(opt,
@@ -105,6 +107,6 @@ if __name__ == "__main__":
     loss_fn = nn.CTCLoss(blank=0).to(device)
     # train and test
     for epoch in range(1, params["epochs"] + 1):
-        train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
+        # train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
         test_loop(myModel, test_dataloader, loss_fn)
-    torch.save(myModel, '../param/voice_nnf_40_new.pth')
+    # torch.save(myModel, '../param/voice_nnf_40_new.pth')
