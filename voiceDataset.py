@@ -10,7 +10,7 @@ from encodeAndDecode import Encode
 def load_voice_item(filename: str,
                     path: str) -> Tuple[Tensor, int, Tensor, str]:
     filename = path + "/data/" + filename
-    waveform, sample_rate = torchaudio.load(filename)
+    waveform, sample_rate = torchaudio.load(filename, normalize=True)
     waveform = torch.flatten(waveform)
     pinyin_label = []
     chinese_label = str

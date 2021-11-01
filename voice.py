@@ -11,10 +11,12 @@ else:
 
 def test():
     model_path = "../param/voice_nnf_40.pth"
-    filename = "/home/wyyadd/B2_352.wav"
+    filename = "/home/wyyadd/A13_160.wav"
     # model
     myModel = torch.load(model_path)
+    # waveform, sample_rate = torchaudio.load(filename, normalize = True)
     waveform, sample_rate = torchaudio.load(filename)
+    print(torchaudio.info(filename))
     waveform = torch.flatten(waveform)
     mfcc_transform = torchaudio.transforms.MFCC(
         sample_rate=sample_rate,
