@@ -9,14 +9,13 @@ else:
     device = 'cpu'
 
 
+# 测试单个音频用
 def test():
-    model_path = "../param/voice_nnf_40.pth"
-    filename = "/home/wyyadd/A13_160.wav"
+    model_path = "../param/voice_nnf_40_new.pth"
+    filename = "F:\wyyadd.wav"
     # model
     myModel = torch.load(model_path)
-    # waveform, sample_rate = torchaudio.load(filename, normalize = True)
     waveform, sample_rate = torchaudio.load(filename)
-    print(torchaudio.info(filename))
     waveform = torch.flatten(waveform)
     mfcc_transform = torchaudio.transforms.MFCC(
         sample_rate=sample_rate,
@@ -39,7 +38,6 @@ def test():
     return chinese, chinese_pinyin
 
 
-chinese , chinese_pinyin = test()
+chinese, chinese_pinyin = test()
 print(chinese)
 print(chinese_pinyin)
-

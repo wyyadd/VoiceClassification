@@ -8,6 +8,7 @@ from Pinyin2Hanzi import is_pinyin
 
 
 class Encode:
+    # 读取220个音调存入hashmap中
     def __init__(self):
         self.char_map = {' ': 0, "'": 1}
         self.index_map = {0: ' ', 1: "'"}
@@ -19,6 +20,7 @@ class Encode:
                     self.index_map[int(i)] = ch
                     i += 1
 
+    # 根据字典， 由音调返回index
     def text_to_int(self, text):
         int_sequence = []
         for c in text:
@@ -29,6 +31,7 @@ class Encode:
             int_sequence.append(ch)
         return int_sequence
 
+    # 由音调返回相应的index
     def int_to_text(self, labels):
         string = []
         for i in labels:
@@ -42,6 +45,7 @@ encode = Encode()
 class Decode:
     def __init__(self):
         self._hmmparams = DefaultHmmParams()
+        # dic 存放 音调转换拼音
         self.dic = {}
         with open("../dataset/voice/resource/dict/pinyin2phone.tone.txt") as f:
             for line in f.readlines():
@@ -52,7 +56,7 @@ class Decode:
         if len(labels) % 2 != 0:
             labels.append('')
         pinyin = []
-        # 规范
+        # 规范, 两两组合转为拼音
         for i in range(0, len(labels), 2):
             x = self.transform(labels[i] + labels[i + 1])
             while not is_pinyin(x) and i < len(labels)-2:
@@ -63,10 +67,12 @@ class Decode:
                     pinyin.append(x)
         if len(labels) == 0:
             return ''
+        # 使用hmm模型和viterbi算法生成中文
         result = viterbi(hmm_params=self._hmmparams, observations=pinyin, path_num=1, log=True)[0]
         result = ''.join(result.path)
         return result, ' '.join(pinyin)
 
+    # 音调到拼音, 并且全部小写
     def transform(self, x: str):
         # change to no digit str
         if x in self.dic:
@@ -78,17 +84,20 @@ class Decode:
         else:
             return ''
 
+    # 根据模型输出的tensor输出解码pinyin
     def greed_decode(self, output, labels=None, label_lengths=0, blank_label=0, collapse_repeated=True):
         arg_maxes = torch.argmax(output, dim=2)
         decodes = []
         targets = []
         for i, args in enumerate(arg_maxes):
             if labels is not None:
+                # 根据标签转化为音素
                 targets.append(encode.int_to_text(labels[i][:label_lengths[i]].tolist()))
             de = []
             for j, index in enumerate(args):
                 index = index.item()
                 if index != blank_label:
+                    # 删除相连之间重复的
                     if collapse_repeated and j != 0 and index == args[j - 1]:
                         continue
                     de.append(index)
@@ -99,8 +108,8 @@ class Decode:
 decode = Decode()
 
 
-def avg_wer(wer_scores, combined_ref_len):
-    return float(sum(wer_scores)) / float(combined_ref_len)
+# def avg_wer(wer_scores, combined_ref_len):
+#     return float(sum(wer_scores)) / float(combined_ref_len)
 
 
 def _levenshtein_distance(ref, hyp):
@@ -150,31 +159,6 @@ def _levenshtein_distance(ref, hyp):
     return distance[m % 2][n]
 
 
-def word_errors(reference, hypothesis, ignore_case=False, delimiter=' '):
-    """Compute the levenshtein distance between reference sequence and
-    hypothesis sequence in word-level.
-    :param reference: The reference sentence.
-    :type reference: basestring
-    :param hypothesis: The hypothesis sentence.
-    :type hypothesis: basestring
-    :param ignore_case: Whether case-sensitive or not.
-    :type ignore_case: bool
-    :param delimiter: Delimiter of input sentences.
-    :type delimiter: char
-    :return: Levenshtein distance and word number of reference sentence.
-    :rtype: list
-    """
-    if ignore_case == True:
-        reference = reference.lower()
-        hypothesis = hypothesis.lower()
-
-    ref_words = reference.split(delimiter)
-    hyp_words = hypothesis.split(delimiter)
-
-    edit_distance = _levenshtein_distance(ref_words, hyp_words)
-    return float(edit_distance), len(ref_words)
-
-
 def char_errors(reference, hypothesis, ignore_case=False, remove_space=False):
     """Compute the levenshtein distance between reference sequence and
     hypothesis sequence in char-level.
@@ -202,41 +186,6 @@ def char_errors(reference, hypothesis, ignore_case=False, remove_space=False):
 
     edit_distance = _levenshtein_distance(reference, hypothesis)
     return float(edit_distance), len(reference)
-
-
-def wer(reference, hypothesis, ignore_case=False, delimiter=' '):
-    """Calculate word error rate (WER). WER compares reference text and
-    hypothesis text in word-level. WER is defined as:
-    .. math::
-        WER = (Sw + Dw + Iw) / Nw
-    where
-    .. code-block:: text
-        Sw is the number of words subsituted,
-        Dw is the number of words deleted,
-        Iw is the number of words inserted,
-        Nw is the number of words in the reference
-    We can use levenshtein distance to calculate WER. Please draw an attention
-    that empty items will be removed when splitting sentences by delimiter.
-    :param reference: The reference sentence.
-    :type reference: basestring
-    :param hypothesis: The hypothesis sentence.
-    :type hypothesis: basestring
-    :param ignore_case: Whether case-sensitive or not.
-    :type ignore_case: bool
-    :param delimiter: Delimiter of input sentences.
-    :type delimiter: char
-    :return: Word error rate.
-    :rtype: float
-    :raises ValueError: If word number of reference is zero.
-    """
-    edit_distance, ref_len = word_errors(reference, hypothesis, ignore_case,
-                                         delimiter)
-
-    if ref_len == 0:
-        raise ValueError("Reference's word number should be greater than 0.")
-
-    wer = float(edit_distance) / ref_len
-    return wer
 
 
 def cer(reference, hypothesis, ignore_case=False, remove_space=False):

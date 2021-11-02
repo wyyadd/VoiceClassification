@@ -6,6 +6,8 @@ from VoiceClassificationModel import VoiceClassificationModel
 from voiceDataset import VoiceDataset, pad_collate
 import encodeAndDecode
 
+# 配置运行设备
+# set device
 if torch.cuda.is_available():
     device = 'cuda'
 else:
@@ -55,12 +57,14 @@ def test_loop(model, dataloader, loss_function):
             test_loss += loss.item() / len(dataloader)
             decoded_preds, decoded_targets = encodeAndDecode.decode.greed_decode(pred.transpose(0, 1), pinyin_labels,
                                                                                  label_lengths)
+            # 计算 Character Error Rate
             for j in range(len(decoded_preds)):
                 target = chinese_labels[j]
                 pred_str, pred_pinyin = encodeAndDecode.decode.pinyin2chinese(decoded_preds[j])
                 chinese_cer.append(encodeAndDecode.cer(target, pred_str))
                 pinyin_cer.append(encodeAndDecode.cer(''.join(decoded_targets[j]), ''.join(decoded_preds[j])))
-                if index % 3 == 0 and index != 0:
+                # print to terminal
+                if index % 10 == 0:
                     target_pinyin = []
                     for i in range(0, len(decoded_targets[j]), 2):
                         target_pinyin.append(decoded_targets[j][i] + decoded_targets[j][i + 1])
@@ -77,21 +81,24 @@ def test_loop(model, dataloader, loss_function):
 
 
 if __name__ == "__main__":
+    # 训练参数
+    # train param
     params = {
-        "n_cnn_layers": 3,
-        "n_rnn_layers": 5,
-        "rnn_dim": 512,
-        "n_class": 220,
-        "n_feats": 40,
-        "stride": 2,
-        "dropout": 0.1,
-        "learning_rate": 5e-4,
-        "batch_size": 20,
-        "epochs": 1
+        "n_cnn_layers": 3,  # cnn层数
+        "n_rnn_layers": 5,  # rnn(gru)层数
+        "rnn_dim": 512,  # rnn维度
+        "n_class": 220,  # 输出特征数
+        "n_feats": 40,  # 与n_mfcc相同
+        "stride": 2,  # 步长
+        "dropout": 0.1,  # dropout rate
+        "learning_rate": 5e-4,  # 学习率
+        "batch_size": 20,  # 训练时的batch大小
+        "epochs": 1  # 训练轮数
     }
-    # dataset
+    # dataset 数据集
     training_data = VoiceDataset(path="../dataset/voice/data_thchs30", train=True)
     test_data = VoiceDataset(path="../dataset/voice/data_thchs30", train=False)
+    # dataloader
     train_dataloader = DataLoader(training_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
                                   shuffle=True)
     test_dataloader = DataLoader(test_data, batch_size=params['batch_size'], collate_fn=lambda b: pad_collate(b),
@@ -100,17 +107,20 @@ if __name__ == "__main__":
     # myModel = VoiceClassificationModel(params['n_cnn_layers'], params['n_rnn_layers'], params['rnn_dim'],
     #                                    params['n_class'], params['n_feats'], params['stride'], params['dropout']).to(
     #     device)
-    myModel = torch.load('../param/voice_nnf_40.pth')
+    # 加载model
+    myModel = torch.load('../param/voice_nnf_40_new.pth')
     # loss_fn and optimizer
     opt = torch.optim.AdamW(myModel.parameters(), params['learning_rate'])
+    loss_fn = nn.CTCLoss(blank=0).to(device)
+    # scheduler
     scheduler = torch.optim.lr_scheduler.OneCycleLR(opt,
                                                     max_lr=params['learning_rate'],
                                                     steps_per_epoch=int(len(train_dataloader)),
                                                     epochs=params['epochs'],
                                                     anneal_strategy='linear')
-    loss_fn = nn.CTCLoss(blank=0).to(device)
     # train and test
     for epoch in range(1, params["epochs"] + 1):
         # train_loop(myModel, train_dataloader, loss_fn, opt, scheduler, epoch)
         test_loop(myModel, test_dataloader, loss_fn)
+    # save model
     # torch.save(myModel, '../param/voice_nnf_40_new.pth')
